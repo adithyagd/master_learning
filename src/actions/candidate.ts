@@ -36,7 +36,7 @@ async function requireAdmin() {
 export async function createCandidate(
   formData: FormData,
   actingAdmin?: { id: string; role: string }
-): Promise<ActionResponse<{ candidateId: string; invitationToken: string }>> {
+): Promise<ActionResponse<{ candidateId: string; invitationToken: string; passwordSet: boolean }>> {
   try {
     const admin = actingAdmin || (await requireAdmin());
     if (admin.role !== "ADMIN") {
