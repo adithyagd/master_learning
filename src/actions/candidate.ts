@@ -17,6 +17,7 @@ interface ActionResponse<T = unknown> {
   success: boolean;
   message?: string;
   data?: T;
+  passwordSet:boolean;
 }
 
 /**
@@ -36,7 +37,7 @@ async function requireAdmin() {
 export async function createCandidate(
   formData: FormData,
   actingAdmin?: { id: string; role: string }
-): Promise<ActionResponse<{ candidateId: string; invitationToken: string; passwordSet: boolean }>> {
+): Promise<ActionResponse<{ candidateId: string; invitationToken: string }>> {
   try {
     const admin = actingAdmin || (await requireAdmin());
     if (admin.role !== "ADMIN") {
