@@ -84,13 +84,14 @@ A full-stack, enterprise-grade learning and workflow platform built for **E2E Pr
 
 ## 🔑 Default Credentials (Development)
 
-After seeding the database, you can log in with the following default accounts:
+After seeding the database (`npm run db:seed`), you can log in with the following default accounts:
 
-| Role | Email | Password |
-|---|---|---|
-| **Admin** | `admin@e2epvtltd.com` | `Admin@E2E2025!Secure` |
-
-*(Additional candidate accounts can be registered through the signup flow or seeded directly.)*
+| Portal | Role | Identifier (Email or Candidate ID) | Password | Notes |
+|---|---|---|---|---|
+| `/admin/login` | **Admin** | `admin@e2epvtltd.com` | `Admin@E2E2025!Secure` | Full administrative center & governance |
+| `/login` | **Candidate (Trainee)** | `candidate@e2epvtltd.com` or `E2E-REC-001` or `REC-001` | `Candidate@E2E2025!` | Recruiter Academy & assessments |
+| `/login` | **Candidate (Certified)** | `certified@e2epvtltd.com` or `E2E-REC-002` | `Candidate@E2E2025!` | Recruiter Operations Workspace & pipeline |
+| `/login` | **Manager** | `manager@e2epvtltd.com` | `Manager@E2E2025!` | Leadership dashboard, approvals & reports |
 
 ---
 

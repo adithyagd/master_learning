@@ -1,4 +1,4 @@
-import { ensureDefaultAdmin } from "../src/lib/seed";
+import { ensureDefaultAdmin, ensureDefaultDemoUsers } from "../src/lib/seed";
 import { seedAcademyCurriculum } from "../src/lib/academy-seed";
 import { seedQuestionBank } from "../src/lib/question-bank-seed";
 import { prisma } from "../src/lib/prisma";
@@ -6,6 +6,7 @@ import { prisma } from "../src/lib/prisma";
 async function main() {
   console.log("Seeding database...");
   await ensureDefaultAdmin();
+  await ensureDefaultDemoUsers();
   await seedAcademyCurriculum();
   await seedQuestionBank();
   console.log("Database seeded successfully.");

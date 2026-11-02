@@ -33,8 +33,7 @@ export default function CandidateLoginPage() {
     const result = await loginCandidate(formData);
 
     if (result.success && result.redirectTo) {
-      router.push(result.redirectTo);
-      router.refresh();
+      window.location.href = result.redirectTo;
     } else {
       setErrorMessage(result.message || "Failed to authenticate.");
       setIsLoading(false);
@@ -546,6 +545,17 @@ export default function CandidateLoginPage() {
                 )}
               </button>
             </form>
+
+            <div style={{ marginTop: "1.2rem", padding: "0.75rem", borderRadius: "10px", background: "#f8fafc", border: "1px dashed #cbd5e1" }}>
+              <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "#1e40af", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.35rem" }}>
+                Default Demo Accounts
+              </div>
+              <div style={{ fontSize: "0.72rem", color: "#475569", lineHeight: 1.55 }}>
+                <div><strong>Candidate:</strong> <code>candidate@e2epvtltd.com</code> or <code>E2E-REC-001</code> / <code>Candidate@E2E2025!</code></div>
+                <div><strong>Certified:</strong> <code>certified@e2epvtltd.com</code> or <code>E2E-REC-002</code> / <code>Candidate@E2E2025!</code></div>
+                <div><strong>Manager:</strong> <code>manager@e2epvtltd.com</code> / <code>Manager@E2E2025!</code></div>
+              </div>
+            </div>
 
             <hr className="admin-divider" />
             <div className="admin-link-row">

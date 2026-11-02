@@ -340,15 +340,21 @@ describe("Phase 13: Real Admin Dashboard & Authorized Aggregations", () => {
       },
     });
 
-    // Report 2: 5 days ago for Recruiter 1
-    const fiveDaysAgo = new Date();
-    fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
-    fiveDaysAgo.setHours(12, 0, 0, 0);
+    // Report 2: earlier in current month for Recruiter 1
+    const earlierThisMonth = new Date(today);
+    if (today.getDate() > 5) {
+      earlierThisMonth.setDate(today.getDate() - 5);
+    } else if (today.getDate() > 1) {
+      earlierThisMonth.setDate(1);
+    } else {
+      earlierThisMonth.setHours(8, 0, 0, 0);
+    }
+    earlierThisMonth.setHours(12, 0, 0, 0);
 
     await prisma.dailyReport.create({
       data: {
         recruiterProfileId: recruiter1.profileId,
-        reportDate: fiveDaysAgo,
+        reportDate: earlierThisMonth,
         callsMade: 30,
         shortlisted: 4,
         interviewsScheduled: 2,

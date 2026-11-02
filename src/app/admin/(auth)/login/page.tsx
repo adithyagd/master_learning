@@ -32,8 +32,7 @@ export default function AdminLoginPage() {
     const result = await loginAdmin(formData);
 
     if (result.success && result.redirectTo) {
-      router.push(result.redirectTo);
-      router.refresh();
+      window.location.href = result.redirectTo;
     } else {
       setErrorMessage(result.message || "Failed to authenticate administrator.");
       setIsLoading(false);
@@ -579,7 +578,7 @@ export default function AdminLoginPage() {
                     name="email"
                     type="email"
                     required
-                    placeholder="REC-001"
+                    placeholder="admin@e2epvtltd.com"
                     autoComplete="email"
                     className="admin-form-input"
                   />
@@ -631,6 +630,16 @@ export default function AdminLoginPage() {
                 )}
               </button>
             </form>
+
+            <div style={{ marginTop: "1.25rem", padding: "0.75rem", borderRadius: "10px", background: "rgba(56, 189, 248, 0.08)", border: "1px dashed rgba(56, 189, 248, 0.25)" }}>
+              <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "#38bdf8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.3rem" }}>
+                Default Admin Credentials
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "#cbd5e1", lineHeight: 1.5 }}>
+                <div><strong>Email:</strong> <code>admin@e2epvtltd.com</code></div>
+                <div><strong>Password:</strong> <code>Admin@E2E2025!Secure</code></div>
+              </div>
+            </div>
 
             <hr className="admin-card-divider" />
             <div className="admin-candidate-link-row">

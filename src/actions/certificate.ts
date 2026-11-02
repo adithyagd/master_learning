@@ -305,57 +305,14 @@ export async function approveCertificate(
 
     const approvedAt = new Date();
 
-    // Generate unique Certificate Number and Verification Hash
-    const year = new Date().getFullYear();
-    const cleanCandId = candidate.candidateId.replace(/[^A-Z0-9]/gi, "").toUpperCase();
-    const randomHex = crypto.randomBytes(3).toString("hex").toUpperCase();
-    const certificateNumber = `E2E-CERT-${year}-${cleanCandId}-${randomHex}`;
-
-    const rawHash = crypto
-      .createHash("sha256")
-      .update(`${certificateNumber}-${candidate.id}-${Date.now()}`)
-      .digest("hex")
-      .slice(0, 16)
-      .toUpperCase();
-    const verificationCode = `${rawHash.slice(0, 4)}-${rawHash.slice(4, 8)}-${rawHash.slice(8, 12)}-${rawHash.slice(12, 16)}`;
-
-    // Atomically approve + issue certificate and unlock workspace
-    await prisma.$transaction(async (tx) => {
-      await tx.certificate.create({
-        data: {
-          certificateNumber,
-          candidateProfileId: candidate.id,
-          finalScore: bestFinal.scorePercentage,
-          issuedAt: approvedAt,
-          approvedByAdminId: admin.id,
-          approvedByAdminName: admin.email,
-          status: "ISSUED",
-          verificationCode,
-          metadata: JSON.stringify({
-            organization: "E2E Procurement Private Limited",
-            cin: "U78300KA2025PTC204064",
-            credentialTitle: "Certified Recruiter — Recruiter Ready",
-            candidateName: candidate.fullName,
-            candidateId: candidate.candidateId,
-            finalScore: bestFinal.scorePercentage,
-            passingBenchmark: 70,
-            completionDate: candidate.academyCompletedAt?.toISOString() || approvedAt.toISOString(),
-            approvedBy: admin.email,
-            adminNotes: adminNotes || null,
-          }),
-        },
-      });
-
-      await tx.candidateProfile.update({
-        where: { id: candidate.id },
-        data: {
-          isCertified: true,
-          certificateStatus: "ISSUED",
-          approvedAt,
-          approvedByAdminId: admin.id,
-          rejectionReason: null,
-        },
-      });
+    await prisma.candidateProfile.update({
+      where: { id: candidate.id },
+      data: {
+        certificateStatus: "APPROVED",
+        approvedAt,
+        approvedByAdminId: admin.id,
+        rejectionReason: null,
+      },
     });
 
     await recordAuditLog({
@@ -367,7 +324,6 @@ export async function approveCertificate(
         candidateId: candidate.candidateId,
         candidateName: candidate.fullName,
         approvedBy: admin.email,
-        certificateNumber,
         adminNotes: adminNotes || null,
       },
     });
@@ -382,7 +338,7 @@ export async function approveCertificate(
     return {
       success: true,
       data: {
-        certificateStatus: "ISSUED",
+        certificateStatus: "APPROVED",
         approvedAt,
       },
     };

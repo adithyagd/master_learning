@@ -52,10 +52,22 @@ export async function loginCandidate(
     });
 
     if (!user) {
-      const profile = await prisma.candidateProfile.findUnique({
-        where: { candidateId: identifier.toUpperCase() },
+      const upperId = identifier.toUpperCase();
+      let profile = await prisma.candidateProfile.findUnique({
+        where: { candidateId: upperId },
         include: { user: { include: { candidateProfile: true } } },
       });
+      if (!profile && !upperId.startsWith("E2E-")) {
+        profile = await prisma.candidateProfile.findUnique({
+          where: { candidateId: `E2E-${upperId}` },
+          include: { user: { include: { candidateProfile: true } } },
+        });
+      } else if (!profile && upperId.startsWith("E2E-")) {
+        profile = await prisma.candidateProfile.findUnique({
+          where: { candidateId: upperId.replace(/^E2E-/, "") },
+          include: { user: { include: { candidateProfile: true } } },
+        });
+      }
       if (profile?.user) {
         user = profile.user;
       }
