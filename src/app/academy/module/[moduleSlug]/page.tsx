@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { getModuleWithProgress } from "@/actions/academy";
+import { prisma } from "@/lib/prisma";
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -26,37 +27,66 @@ interface ModulePageProps {
 
 export default async function ModuleOverviewPage({ params }: ModulePageProps) {
   const user = await getCurrentUser();
-  if (!user || user.role !== "CANDIDATE" || !user.candidateProfile) {
+  if (!user) {
     redirect("/login");
+  }
+  const isAdmin = user.role === "ADMIN";
+  if (!isAdmin && (user.role !== "CANDIDATE" || !user.candidateProfile)) {
+    redirect(user.role === "MANAGER" ? "/manager" : "/login");
   }
 
   const { moduleSlug } = await params;
-  const moduleData = await getModuleWithProgress(moduleSlug, user.candidateProfile.id);
+  const moduleData = isAdmin
+    ? await prisma.module.findUnique({
+        where: { slug: moduleSlug },
+        include: { lessons: { orderBy: { lessonNumber: "asc" } } },
+      }).then((module) =>
+        module
+          ? {
+              ...module,
+              lessons: module.lessons.map((lesson) => ({
+                ...lesson,
+                isCompleted: false,
+                completedAt: null,
+              })),
+              isLocked: false,
+              completedLessons: 0,
+              totalLessons: module.lessons.length,
+              progressPercentage: 0,
+              allLessonsCompleted: false,
+            }
+          : null
+      )
+    : await getModuleWithProgress(moduleSlug, user.candidateProfile!.id);
 
   if (!moduleData) {
     notFound();
   }
 
-  const firstIncompleteLesson = moduleData.lessons.find((l) => !l.isCompleted);
+  const firstIncompleteLesson = isAdmin
+    ? undefined
+    : moduleData.lessons.find((l) => !l.isCompleted);
   const primaryActionLesson = firstIncompleteLesson || moduleData.lessons[0];
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <Navbar
-        user={{
-          name: user.candidateProfile.fullName,
-          email: user.email,
-          role: "CANDIDATE",
-          isCertified: user.candidateProfile.isCertified,
-          candidateCode: user.candidateProfile.candidateId,
-        }}
+        user={isAdmin
+          ? { name: user.email, email: user.email, role: "ADMIN" }
+          : {
+              name: user.candidateProfile!.fullName,
+              email: user.email,
+              role: "CANDIDATE",
+              isCertified: user.candidateProfile!.isCertified,
+              candidateCode: user.candidateProfile!.candidateId,
+            }}
         onLogout={logoutUser}
       />
 
       <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-6">
         {/* Navigation Breadcrumb */}
         <div className="flex items-center gap-2 text-xs text-navy-500">
-          <Link href="/academy" className="hover:text-brand-600 transition-colors font-medium">
+          <Link href={isAdmin ? "/admin/academy" : "/academy"} className="hover:text-brand-600 transition-colors font-medium">
             Academy
           </Link>
           <span>/</span>
@@ -86,13 +116,15 @@ export default async function ModuleOverviewPage({ params }: ModulePageProps) {
                   {moduleData.passingScore}% Assessment Score
                 </Badge>
                 <span className="text-[10px] text-navy-400">
-                  {moduleData.completedLessons} of {moduleData.totalLessons} Lessons Completed
+                  {isAdmin
+                    ? `${moduleData.totalLessons} Lessons Available`
+                    : `${moduleData.completedLessons} of ${moduleData.totalLessons} Lessons Completed`}
                 </span>
               </div>
             </div>
 
             {/* Module Progress Bar */}
-            <div className="mt-6 pt-6 border-t border-navy-100">
+            {!isAdmin && <div className="mt-6 pt-6 border-t border-navy-100">
               <div className="flex justify-between items-center text-xs mb-1.5 text-navy-700 font-medium">
                 <span>Lesson Curriculum Progress</span>
                 <span className="font-semibold text-navy-900">
@@ -105,11 +137,11 @@ export default async function ModuleOverviewPage({ params }: ModulePageProps) {
                 variant={moduleData.allLessonsCompleted ? "success" : "brand"}
                 size="md"
               />
-            </div>
+            </div>}
           </CardHeader>
 
           {/* Module Action Bar */}
-          {!moduleData.isLocked && (
+          {!isAdmin && !moduleData.isLocked && (
             <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white px-6 sm:px-8 py-4">
               <div className="text-xs text-navy-500">
                 {moduleData.allLessonsCompleted ? (
@@ -147,7 +179,7 @@ export default async function ModuleOverviewPage({ params }: ModulePageProps) {
         </Card>
 
         {/* Locked Banner if Module is Locked */}
-        {moduleData.isLocked ? (
+        {!isAdmin && moduleData.isLocked ? (
           <Card className="text-center p-8 bg-amber-50/30 border-amber-200">
             <CardContent className="space-y-4">
               <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
@@ -225,7 +257,7 @@ export default async function ModuleOverviewPage({ params }: ModulePageProps) {
                   </div>
 
                   <div className="flex-shrink-0">
-                    <Link href={`/academy/module/${moduleData.slug}/${lesson.slug}`}>
+                    {!isAdmin && <Link href={`/academy/module/${moduleData.slug}/${lesson.slug}`}>
                       <Button
                         variant={lesson.isCompleted ? "outline" : "primary"}
                         size="sm"
@@ -233,14 +265,14 @@ export default async function ModuleOverviewPage({ params }: ModulePageProps) {
                       >
                         {lesson.isCompleted ? "Review Lesson" : "Start Lesson"}
                       </Button>
-                    </Link>
+                    </Link>}
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Assessment Milestone Box */}
-            <Card className="border-brand-200 bg-gradient-to-r from-brand-50/40 to-slate-50 mt-6">
+            {!isAdmin && <Card className="border-brand-200 bg-gradient-to-r from-brand-50/40 to-slate-50 mt-6">
               <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-start gap-3.5">
                   <div className="w-10 h-10 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center flex-shrink-0">
@@ -270,7 +302,7 @@ export default async function ModuleOverviewPage({ params }: ModulePageProps) {
                   </Badge>
                 )}
               </CardContent>
-            </Card>
+            </Card>}
           </div>
         )}
       </main>

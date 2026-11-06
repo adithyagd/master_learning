@@ -288,7 +288,6 @@ export async function loginAdmin(
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/",
-        maxAge: 7 * 24 * 60 * 60,
       });
     } catch {
       // Test environment fallback

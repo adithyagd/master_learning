@@ -8,6 +8,7 @@ import {
   getLessonWithNavigation,
 } from "@/actions/academy";
 import { seedAcademyCurriculum } from "@/lib/academy-seed";
+import { ACADEMY_MODULES } from "@/lib/design-system";
 
 describe("Phase 2: Academy Modules, Lessons & Progress Persistence", () => {
   let candidateA: { id: string; userId: string };
@@ -95,6 +96,16 @@ describe("Phase 2: Academy Modules, Lessons & Progress Persistence", () => {
       modules.forEach((mod) => {
         expect(mod.passingScore).toBe(70);
       });
+    });
+
+    it("maps admin inspection links to the seeded module slugs", async () => {
+      for (const module of ACADEMY_MODULES) {
+        const seededModule = await prisma.module.findUnique({
+          where: { slug: module.slug },
+        });
+
+        expect(seededModule?.moduleNumber).toBe(module.number);
+      }
     });
 
     it("strictly verifies Module 5 and all its lessons contain zero ATS mentions", async () => {

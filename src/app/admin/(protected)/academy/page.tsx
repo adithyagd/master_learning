@@ -84,7 +84,7 @@ export default function AdminAcademyPage() {
             <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
               <span className="text-slate-400">5 Lessons &bull; 10 Quizzes</span>
               <Link
-                href={`/academy/module/${mod.id}`}
+                href={`/academy/module/${mod.slug}`}
                 className="text-brand-600 font-semibold hover:text-brand-800 flex items-center gap-1"
               >
                 Inspect Module <ChevronRight className="w-3.5 h-3.5" />

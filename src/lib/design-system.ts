@@ -54,6 +54,7 @@ export const ACADEMY_MODULES = [
   {
     number: 1,
     id: "module-1",
+    slug: "recruitment-fundamentals",
     title: "Module 1 — Recruitment Fundamentals",
     description: "Core recruiting lifecycles, talent acquisition models, recruiter ethics, and SLA fundamentals.",
     passingScore: 70,
@@ -61,6 +62,7 @@ export const ACADEMY_MODULES = [
   {
     number: 2,
     id: "module-2",
+    slug: "jd-decoding",
     title: "Module 2 — JD Decoding & Requirement Understanding",
     description: "Analyzing job descriptions, extracting mandatory vs preferred skills, boolean logic, and calibration.",
     passingScore: 70,
@@ -68,6 +70,7 @@ export const ACADEMY_MODULES = [
   {
     number: 3,
     id: "module-3",
+    slug: "candidate-sourcing-preparation",
     title: "Module 3 — Candidate Sourcing & Recruitment Preparation",
     description: "Multichannel sourcing, active & passive talent mapping, talent pool curation, and pitch crafting.",
     passingScore: 70,
@@ -75,6 +78,7 @@ export const ACADEMY_MODULES = [
   {
     number: 4,
     id: "module-4",
+    slug: "communication-screening-interview-management",
     title: "Module 4 — Communication, Screening & Interview Management",
     description: "Cold outreach, telephonic screening, behavioral assessment, interview scheduling, and coordination.",
     passingScore: 70,
@@ -82,6 +86,7 @@ export const ACADEMY_MODULES = [
   {
     number: 5,
     id: "module-5",
+    slug: "recruitment-operations",
     title: "Module 5 — Recruitment Operations",
     description: "Pipeline management, database governance, tracker workflows, compliance, and client reporting.",
     passingScore: 70,
@@ -162,4 +167,3 @@ export const MANAGER_NAV_ITEMS = [
   { id: "targets", label: "Team Targets", path: "/manager/targets", icon: "Target" },
   { id: "insights", label: "Team Insights", path: "/manager/insights", icon: "TrendingUp" },
 ] as const;
-
