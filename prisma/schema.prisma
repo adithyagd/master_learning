@@ -1,13 +1,14 @@
 // Prisma Schema for E2E Procurement Pvt Ltd Platform
-// Database: SQLite for robust relational persistence and zero external dependencies
+// Database: PostgreSQL for persistent production and serverless deployments
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider  = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 model User {
@@ -569,4 +570,3 @@ model Notification {
   @@index([userId, createdAt])
   @@index([dedupKey])
 }
-

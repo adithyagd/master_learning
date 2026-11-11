@@ -27,6 +27,15 @@ export function Navbar({
   onToggleSidebar,
   showSidebarToggle = false,
 }: NavbarProps) {
+  const homeHref =
+    user?.role === "ADMIN"
+      ? "/admin/dashboard"
+      : user?.role === "MANAGER"
+      ? "/manager"
+      : user
+      ? "/academy"
+      : "/";
+
   return (
     <header className="sticky top-0 z-40 w-full bg-white border-b border-navy-200/80 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -43,7 +52,7 @@ export function Navbar({
             </button>
           )}
 
-          <Link href="/" className="hover:opacity-90 transition-opacity">
+          <Link href={homeHref} className="hover:opacity-90 transition-opacity">
             <Logo variant="full" size="md" />
           </Link>
         </div>

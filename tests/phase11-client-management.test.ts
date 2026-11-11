@@ -240,7 +240,7 @@ describe("Phase 11: Admin Client Management & Client Master", () => {
       expect(res.data?.code).toBe(TEST_CLIENT_CODE_1); // Upper-cased
       expect(res.data?.status).toBe("ACTIVE");
 
-      // Verify in SQLite database
+      // Verify the persisted database record
       const saved = await prisma.clientMaster.findUnique({
         where: { code: TEST_CLIENT_CODE_1 },
       });

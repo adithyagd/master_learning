@@ -3,11 +3,30 @@ import { hashPassword } from "./auth";
 import { recordAuditLog } from "./audit";
 
 export async function ensureDefaultAdmin() {
-  const adminEmail = (process.env.ADMIN_DEFAULT_EMAIL || "admin@e2epvtltd.com").toLowerCase();
-  const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD || "Admin@E2E2025!Secure";
+  const adminEmail = process.env.ADMIN_DEFAULT_EMAIL || (
+    process.env.NODE_ENV === "production"
+      ? ""
+      : "admin@e2epvtltd.com"
+  );
+  const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD || (
+    process.env.NODE_ENV === "production"
+      ? ""
+      : "Admin@E2E2025!Secure"
+  );
+
+  if (!adminEmail || !adminPassword) {
+    throw new Error(
+      "ADMIN_DEFAULT_EMAIL and ADMIN_DEFAULT_PASSWORD must be configured before production seeding."
+    );
+  }
+  if (process.env.NODE_ENV === "production" && adminPassword.length < 16) {
+    throw new Error("ADMIN_DEFAULT_PASSWORD must be at least 16 characters in production.");
+  }
+
+  const normalizedAdminEmail = adminEmail.toLowerCase();
 
   const existingAdmin = await prisma.user.findUnique({
-    where: { email: adminEmail },
+    where: { email: normalizedAdminEmail },
   });
 
   const passwordHash = await hashPassword(adminPassword);
@@ -15,7 +34,7 @@ export async function ensureDefaultAdmin() {
   if (!existingAdmin) {
     const admin = await prisma.user.create({
       data: {
-        email: adminEmail,
+        email: normalizedAdminEmail,
         passwordHash,
         name: "System Administrator",
         role: "ADMIN",
@@ -28,10 +47,10 @@ export async function ensureDefaultAdmin() {
       action: "ADMIN_LOGIN",
       targetType: "USER",
       targetId: admin.id,
-      details: { message: "Initial Admin account seeded successfully", email: adminEmail },
+      details: { message: "Initial Admin account seeded successfully", email: normalizedAdminEmail },
     });
 
-    console.log(`[Seed] Default Admin created: ${adminEmail}`);
+    console.log(`[Seed] Default Admin created: ${normalizedAdminEmail}`);
     return admin;
   } else {
     const updated = await prisma.user.update({
@@ -42,7 +61,7 @@ export async function ensureDefaultAdmin() {
         status: "ACTIVE",
       },
     });
-    console.log(`[Seed] Default Admin verified/updated: ${adminEmail}`);
+    console.log(`[Seed] Default Admin verified/updated: ${normalizedAdminEmail}`);
     return updated;
   }
 }
@@ -208,4 +227,3 @@ export async function ensureDefaultDemoUsers() {
     }
   }
 }
-

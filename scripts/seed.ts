@@ -6,7 +6,9 @@ import { prisma } from "../src/lib/prisma";
 async function main() {
   console.log("Seeding database...");
   await ensureDefaultAdmin();
-  await ensureDefaultDemoUsers();
+  if (process.env.NODE_ENV !== "production") {
+    await ensureDefaultDemoUsers();
+  }
   await seedAcademyCurriculum();
   await seedQuestionBank();
   console.log("Database seeded successfully.");

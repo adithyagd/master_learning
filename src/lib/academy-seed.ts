@@ -671,5 +671,5 @@ export async function seedAcademyCurriculum() {
     }
   }
 
-  console.log("Academy curriculum successfully seeded into SQLite database.");
+  console.log("Academy curriculum successfully seeded into the database.");
 }

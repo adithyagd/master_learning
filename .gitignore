@@ -15,11 +15,23 @@
 
 # Misc
 .DS_Store
-*.pem
 
-# Local env files
-.env*.local
+# Local environment files (keep the example template tracked)
 .env
+.env.*
+!.env.example
+
+# Database backups
+*.dump
+*.backup
+*.bak
+
+# Private keys and local secrets
+*.pem
+*.key
+*.p12
+*.pfx
+/secrets/
 
 # Vercel
 .vercel

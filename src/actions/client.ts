@@ -112,7 +112,7 @@ export async function createClient(
       };
     }
 
-    // 5. Create Client in SQLite
+    // 5. Create client in the database
     const client = await prisma.clientMaster.create({
       data: {
         name: trimmedName,

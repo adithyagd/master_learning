@@ -6,13 +6,13 @@
 
 ## 1. System Architecture & Prerequisites
 
-The platform is designed as a standalone, enterprise-grade Next.js application utilizing the App Router architecture, Prisma ORM, and high-performance SQLite relational storage with zero external service dependencies.
+The platform is a Next.js application using Prisma ORM and Supabase-hosted PostgreSQL. The application uses its own JWT authentication; Supabase Auth is not required.
 
 ### Technical Stack
 - **Framework**: Next.js 15 (App Router, Server Actions, Edge Middleware)
 - **Runtime**: Node.js 20 LTS or Node.js 22 LTS
 - **Language**: TypeScript 5.7 (Strict Mode)
-- **Database**: SQLite with Write-Ahead Logging (WAL) via Prisma ORM
+- **Database**: Supabase PostgreSQL via Prisma ORM
 - **Authentication**: Stateless, cryptographically signed HTTP-only JWTs (`jose`) with bcrypt password hashing
 - **Styling & UI**: Tailwind CSS, Lucide Icons, Accessible Radix/Custom ARIA components
 
@@ -25,11 +25,14 @@ The platform is designed as a standalone, enterprise-grade Next.js application u
 
 ## 2. Environment Variables Configuration
 
-Create a production `.env` file in the application root directory. **Never commit production `.env` files to source control.**
+Create a project in the [Supabase Dashboard](https://supabase.com/dashboard), choose a region close to your Vercel functions, and set a strong database password. Once it is ready, open **Connect** and copy the Transaction Pooler and Session Pooler connection strings. Keep the database password private and URL-encode special characters in it before placing it in a connection URL. **Never commit `.env` or production database credentials.**
 
 ```env
-# Database Connection (SQLite local file path)
-DATABASE_URL="file:./dev.db"
+# Supabase Transaction Pooler (port 6543) — application/runtime
+DATABASE_URL="postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1&sslmode=require"
+
+# Supabase Session Pooler (port 5432) — Prisma migrations
+DATABASE_URL_UNPOOLED="postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres?sslmode=require"
 
 # Cryptographic Secret for JWT Session Signing (Must be >= 32 characters of high entropy)
 # Generate with: openssl rand -base64 32
@@ -39,13 +42,14 @@ JWT_SECRET="generate-a-strong-high-entropy-64-character-secret-key-here"
 ADMIN_DEFAULT_EMAIL="admin@e2epvtltd.com"
 ADMIN_DEFAULT_PASSWORD="ReplaceWithComplexPassword123!@#"
 
-# Canonical Production URL (Required for CORS, absolute links, and redirects)
-NEXT_PUBLIC_APP_URL="https://recruiter.e2epvtltd.com"
-
 # Node Environment
 NODE_ENV="production"
 PORT=3000
 ```
+
+Use the exact usernames, hosts, and database name shown by Supabase; the URLs above are examples. URL-encode special characters in the database password. Set both database variables in the local `.env` and in Vercel for **Production**, **Preview**, and **Development** as applicable. `prisma/schema.prisma` uses `DATABASE_URL` for the application and `DATABASE_URL_UNPOOLED` for migrations.
+
+See the [Supabase Prisma guide](https://supabase.com/docs/guides/database/prisma) for connection-string details.
 
 ### Secret Rotation Protocol
 - If `JWT_SECRET` is rotated, all active sessions will be invalidated immediately, requiring users to log in again.
@@ -55,32 +59,32 @@ PORT=3000
 
 ## 3. Installation & Build Pipeline
 
-Run the following commands on the production host or build server:
+Run the following steps for a new, empty Supabase project. This creates the tables from the committed Prisma migration and seeds the initial administrator and curriculum. It does not import data from `prisma/dev.db`.
 
 ```bash
-# 1. Clone repository and install dependencies deterministically
-git clone <repository_url> /var/www/e2e-recruiter-platform
-cd /var/www/e2e-recruiter-platform
-npm ci --omit=dev --ignore-scripts
-npm install --save-dev prisma typescript  # Required for build & migration generation
-
-# 2. Generate Prisma Client & Push Database Schema
+# Install dependencies and generate Prisma Client
+npm ci
 npx prisma generate
-npx prisma db push
 
-# 3. Seed Master Curriculum, Assessment Question Bank, and Admin Account
+# Create the schema in the fresh Supabase database
+npx prisma migrate deploy
+
+# Configure ADMIN_DEFAULT_EMAIL and a unique ADMIN_DEFAULT_PASSWORD first.
+# Run once: this creates/updates that admin and seeds the curriculum.
 npm run db:seed
-
-# 4. Verify TypeScript & Lint
-npx tsc --noEmit
-npm run lint
-
-# 5. Run Full Verification Test Suite
-npx vitest run
-
-# 6. Compile Optimized Production Build
-npm run build
 ```
+
+`npm run db:seed` updates the configured administrator password when run again; protect the credentials and run it only when intended. The seeder does not create demo users in production.
+
+For Vercel, add `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `JWT_SECRET`, `ADMIN_DEFAULT_EMAIL`, and `ADMIN_DEFAULT_PASSWORD` in **Project Settings → Environment Variables**. `DATABASE_URL` must be a PostgreSQL connection string, not `file:./dev.db`. Apply pending migrations from a trusted environment with the session-pooler/direct URL before the first deployment and before each release that changes the schema:
+
+```bash
+npx prisma migrate deploy
+```
+
+Do not run `prisma db push` against production. Authenticated dashboard pages are rendered dynamically and must not query the database during the Vercel build. The database schema must nevertheless be migrated before the application serves requests.
+
+Then deploy normally; Vercel runs `npm run build`. The production build does not seed or migrate the database implicitly.
 
 ---
 
@@ -102,7 +106,7 @@ module.exports = {
       script: "node_modules/next/dist/bin/next",
       args: "start -p 3000",
       cwd: "/var/www/e2e-recruiter-platform",
-      instances: 1, // Keep at 1 for SQLite single-file write consistency
+      instances: 1,
       autorestart: true,
       watch: false,
       max_memory_restart: "1G",
@@ -236,7 +240,7 @@ Before releasing to end users, verify the following:
 - [ ] Production `.env` file populated with unique, high-entropy `JWT_SECRET`.
 - [ ] Default administrator credentials updated.
 - [ ] HTTPS certificates installed and auto-renewing (`certbot renew --dry-run`).
-- [ ] SQLite database file permissions restricted to the application service user (`chmod 600 prisma/dev.db`).
+- [ ] Supabase database URLs and application secrets configured in Vercel.
 - [ ] NGINX security headers verified via `curl -I https://recruiter.e2epvtltd.com`.
 - [ ] All 18 automated test suites passing (`npx vitest run`).
-- [ ] Automated database backup cron job active (see `docs/BACKUP_RECOVERY.md`).
+- [ ] Supabase backup/restore plan reviewed (see `docs/BACKUP_RECOVERY.md`).

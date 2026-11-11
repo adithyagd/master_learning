@@ -35,7 +35,7 @@ A full-stack, enterprise-grade learning and workflow platform built for **E2E Pr
 
 - **Framework**: [Next.js 15 (App Router)](https://nextjs.org/)
 - **UI & Styling**: [React 19](https://react.dev/), [Tailwind CSS](https://tailwindcss.com/), [Lucide React](https://lucide.dev/)
-- **Database & ORM**: [Prisma ORM](https://www.prisma.io/) with [SQLite](https://sqlite.org/) (zero external database configuration needed for local development)
+- **Database & ORM**: [Prisma ORM](https://www.prisma.io/) with Supabase-hosted PostgreSQL
 - **Authentication**: Stateless, edge-compatible JWT authentication via `jose` and `bcryptjs`
 - **Testing**: [Vitest](https://vitest.dev/) & [React Testing Library](https://testing-library.com/)
 
@@ -57,22 +57,25 @@ A full-stack, enterprise-grade learning and workflow platform built for **E2E Pr
 
 2. **Install dependencies**:
    ```bash
-   npm install
+   npm ci
    ```
 
-3. **Configure Environment Variables**:
+3. **Create a Supabase PostgreSQL project and configure environment variables**:
    Copy `.env.example` to `.env`:
    ```bash
    cp .env.example .env
    ```
    *(On Windows PowerShell: `Copy-Item .env.example .env`)*
 
-4. **Initialize and Seed the Database**:
-   Push the schema to your local SQLite database and populate default users, academy curriculum, and question bank:
+   Replace the placeholders in `.env` with the Transaction Pooler and Session Pooler connection strings from **Supabase Dashboard → Connect**. Set a unique `JWT_SECRET` with at least 32 characters and a unique `ADMIN_DEFAULT_PASSWORD` with at least 16 characters. Keep `.env` private.
+
+4. **Migrate and seed the database**:
    ```bash
-   npx prisma db push
+   npx prisma migrate deploy
    npm run db:seed
    ```
+
+   The seed command creates or updates the configured administrator. It also creates demo manager/candidate accounts outside production.
 
 5. **Start the Development Server**:
    ```bash
@@ -84,11 +87,11 @@ A full-stack, enterprise-grade learning and workflow platform built for **E2E Pr
 
 ## 🔑 Default Credentials (Development)
 
-After seeding the database (`npm run db:seed`), you can log in with the following default accounts:
+After seeding in development (`npm run db:seed`), the demo accounts below are available. The administrator uses the email and password configured by `ADMIN_DEFAULT_EMAIL` and `ADMIN_DEFAULT_PASSWORD`; demo accounts are not created in production.
 
 | Portal | Role | Identifier (Email or Candidate ID) | Password | Notes |
 |---|---|---|---|---|
-| `/admin/login` | **Admin** | `admin@e2epvtltd.com` | `Admin@E2E2025!Secure` | Full administrative center & governance |
+| `/admin/login` | **Admin** | Value of `ADMIN_DEFAULT_EMAIL` in `.env` | Value of `ADMIN_DEFAULT_PASSWORD` in `.env` | Full administrative center & governance |
 | `/login` | **Candidate (Trainee)** | `candidate@e2epvtltd.com` or `E2E-REC-001` or `REC-001` | `Candidate@E2E2025!` | Recruiter Academy & assessments |
 | `/login` | **Candidate (Certified)** | `certified@e2epvtltd.com` or `E2E-REC-002` | `Candidate@E2E2025!` | Recruiter Operations Workspace & pipeline |
 | `/login` | **Manager** | `manager@e2epvtltd.com` | `Manager@E2E2025!` | Leadership dashboard, approvals & reports |
@@ -114,7 +117,8 @@ npm run test:watch
 ```text
 ├── docs/                # Architecture, deployment, and backup recovery documentation
 ├── prisma/
-│   └── schema.prisma    # Complete database schema definition
+│   ├── schema.prisma    # PostgreSQL database schema
+│   └── migrations/      # Versioned Prisma migrations
 ├── scripts/
 │   └── seed.ts          # Master seed script for curriculum, questions, & admin
 ├── src/

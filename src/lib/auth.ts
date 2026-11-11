@@ -2,11 +2,10 @@ import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { prisma } from "./prisma";
+import { getJwtSecret } from "./jwt-secret";
 import crypto from "crypto";
 
-const JWT_SECRET_STRING =
-  process.env.JWT_SECRET || "e2e-procurement-default-fallback-jwt-secret-key-32";
-const JWT_SECRET = new Uint8Array(Buffer.from(JWT_SECRET_STRING, "utf-8"));
+const JWT_SECRET = getJwtSecret();
 export const AUTH_COOKIE_NAME = "e2e_auth_token";
 
 export interface SessionPayload {

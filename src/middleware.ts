@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
+import { getJwtSecret } from "./lib/jwt-secret";
 
-const JWT_SECRET_STRING =
-  process.env.JWT_SECRET || "e2e-procurement-default-fallback-jwt-secret-key-32";
-const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_STRING);
+const JWT_SECRET = getJwtSecret();
 const AUTH_COOKIE_NAME = "e2e_auth_token";
 
 interface TokenPayload {
